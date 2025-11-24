@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <link rel="manifest" href="manifest.json">
+   <meta name="theme-color" content="#2196f3">
+  <meta charset="UTF-8" />
+  <title>Wireless GPS</title>
+  <style>
+    :root {
+  	    --accent: #1E90FF;   /* Bright Blue */
+  	    --secondary: #FFD700; /* Sunshine Yellow */
+  	    --highlight: #32CD32; /* Fresh Green */
+  	    --text: #333333;
+  	    --bg: #FFFFFF;
+  	    --border: #E0E0E0;    
+    }
+
+    body {
+      	font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      	margin: 2rem;
+      	color: #0f172a;
+      	background: #f8fafc;
+    }
+
+    .tabs {
+      	max-width: 520px;
+      	background: var(--bg);
+      	border: 2px solid var(--accent);
+      	border-radius: 12px;
+      	overflow: hidden;
+  	    box-shadow: 0 4px 8px rgba(30,144,255,0.2);    
+    }
+
+    /* Tab list */
+    .tablist {
+  	    display: flex;
+  	    gap: 6px;
+  	    padding: 8px;
+  	    background: var(--secondary);    
+    }
+
+    .tablist button[role="tab"] {
+  	    border: none;
+  	    padding: 10px 16px;
+  	    border-radius: 8px;
+  	    background: var(--highlight);
+  	    color: var(--bg);
+  	    font-weight: bold;
+  	    cursor: pointer;
+  	    transition: transform 0.2s ease;
+    }
+
+    .tablist button[role="tab"]:hover {
+  	    transform: scale(1.05);
+  	    background: var(--accent);
+    }
+
+    .tablist button[aria-selected="true"] {
+  	    background: var(--accent);
+  	    color: var(--bg);
+  	    box-shadow: inset 0 -3px var(--secondary);
+    }
+
+    .tab-icon {
+    	  width: 36px;
+  	    height: 36px;
+  	    margin-right: 6px;
+  	    vertical-align: middle;
+    }
+
+    /* Panels */
+    .tabpanel {
+  	    padding: 16px;
+  	    background: #f9f9f9;
+    }
+
+    .tabpanel[hidden] {
+      	display: none;
+    }
+
+    /* Example content styling */
+    h2 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    p {
+        margin: 0.25rem 0 0.75rem;
+        color: #334155;
+    }
+    
+    .card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        background: #ffffff;
+    }
+
+    .a1-span {
+        font-weight: bold;
+        font-size: 80px;
+        color: blue;
+	      border: 2px solid red;
+	      background-color: yellow;
+    }
+
+    button {
+        font-size: 20px;
+	      color: yellow;
+	      background-color: blue;
+	      border-radius: 25%;
+    }
+
+    select {
+        margin: 5px;
+        width: 280px;
+        padding: 5px 35px 5px 5px;
+        font-size: 22px;
+	      font-weight: bold;
+        color: blue;
+        border: 1px solid #CCC;
+        height: 36px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background: url("DownArrow2.png") 96% / 5% no-repeat #EEE;
+    }
+
+  </style>
+</head>
+<body>
+<h1>Wireless GPS Sensor App</h1>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" sizes="256x256" href="/satellite.png">
+<div class="tabs">
+    <div class="tablist" role="tablist" aria-label="Sample tabs">
+        <button id="tab-1"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panel-1"
+            tabindex="0">
+			<img src="satellite.png" alt="Sensor Icon" style="width:28px; height:28px; vertical-align:middle;">
+			Sensor
+        </button>
+        <button id="tab-2"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panel-2"
+            tabindex="-1">
+			<img src="tools.png" alt="Sensor Icon" style="width:28px; height:28px; vertical-align:middle;">
+        	Settings
+        </button>
+    </div>
+
+    <div id="panel-1" class="tabpanel" role="tabpanel" aria-labelledby="tab-1">
+        <button id="connectBleButton">Connect to Device</button>
+        <button id="disconnectBleButton" disabled>Disconnect Device</button>
+        <p>Sensor state: <span id="bleState" style="color:#d13a30;">Disconnected</span></p>
+        <p>Firmware: <span id="fwIDInfo" style="color:#d13a30;"></span></p>
+        <p>Battery State: <span id="batteryLevel"></span></p>
+
+        <div class="card">
+			<h2>Latitude</h2>
+            <h2><span class="a1-span" id="latitudeDisplay"></span></h2>
+			<h2>Longitude</h2>
+            <h2><span class="a1-span" id="longitudeDisplay"></span></h2>
+            <button id="distanceButton">Start</button>
+            <h2>Distance</h2>			
+            <h2><span class="a1-span" id="distanceDisplay"></span></h2>
+        </div>
+
+    </div>
+
+    <div id="panel-2" class="tabpanel" role="tabpanel" aria-labelledby="tab-2" hidden>
+        <h2>Satellite Selection</h2>
+        <div class="card">
+            <div class="dropdown" style="width:500px;">
+                <select name="Satellite" id="satelliteSelect">
+                    <option value="GPS (USA)">GPS (USA)</option>
+                    <option value="BEIDOU (CN)">BEIDOU (CN)</option>
+                    <option value="GLONASS (RUS)">GLONASS (RUS)</option>
+                    <option value="GPS + BEIDOU" selected>GPS + BEIDOU</option>
+                    <option value="GPS + GLONASS">GPS + GLONASS</option>
+                    <option value="BEIDOU + GLONASS">BEIDOU + GLONASS</option>
+                    <option value="GPS + BEIDOU + GLONASS">GPS + BEIDOU + GLONASS</option>
+                </select>
+            </div>
+        </div>
+
+        <h2>Output Rate</h2>
+        <div class="card">
+            <div class="dropdown" style="width:100px;">
+                <select name="NavRate" id="navRate">
+                    <option value="1 Hz">1 data per sec</option>
+                    <option value="5 Hz">5 data per sec</option>
+                    <option value="10 Hz">10 data per sec</option>
+                </select>
+            </div>
+        </div>
+    </div>
+  </div>
+
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js")
+    .then(() => console.log("Service Worker registered"));
+}
+      // Basic accessible tab behavior (click + keyboard)
+    const tablist   = document.querySelector('[role="tablist"]');
+    const tabs      = Array.from(tablist.querySelectorAll('[role="tab"]'));
+    const panels    = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
+
+    function activateTab(newTab) {
+      tabs.forEach((tab, i) => {
+        const selected = tab === newTab;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.setAttribute('tabindex', selected ? '0' : '-1');
+        panels[i].hidden = !selected;
+      });
+      newTab.focus();
+    }
+
+    // Click handling
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => activateTab(tab));
+    });
+
+    // Keyboard handling (ArrowLeft/ArrowRight/Home/End)
+    tablist.addEventListener('keydown', (e) => {
+      const currentIndex = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
+      let newIndex = currentIndex;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          newIndex = (currentIndex + 1) % tabs.length;
+          e.preventDefault();
+          break;
+        case 'ArrowLeft':
+          newIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+          e.preventDefault();
+          break;
+        case 'Home':
+          newIndex = 0;
+          e.preventDefault();
+          break;
+        case 'End':
+          newIndex = tabs.length - 1;
+          e.preventDefault();
+          break;
+        default:
+          return;
+      }
+
+      activateTab(tabs[newIndex]);
+    });
+
+    // Optional: support deep-linking via hash (#panel-2)
+    window.addEventListener('hashchange', syncFromHash);
+    function syncFromHash() {
+      const id = location.hash.replace('#', '');
+      const panel = document.getElementById(id);
+      if (!panel) return;
+      const tabId = panel.getAttribute('aria-labelledby');
+      const tab = document.getElementById(tabId);
+      if (tab) activateTab(tab);
+    }
+    // Initialize from hash if present
+    syncFromHash();
+
+    // DOM Elements
+    const connectButton		        = document.getElementById('connectBleButton');
+    const disconnectButton 	        = document.getElementById('disconnectBleButton');
+    const distanceButton	        = document.getElementById('distanceButton');
+    const longitudeValue 	        = document.getElementById('longitudeDisplay');
+    const latitudeValue 	        = document.getElementById('latitudeDisplay');
+    const distanceValue		        = document.getElementById('distanceDisplay');
+    const bleStateContainer 	    = document.getElementById('bleState');
+    const batteryLevelContainer     = document.getElementById('batteryLevel');
+    const fwIDInfoContainer         = document.getElementById('fwIDInfo');
+    const fwIDInfo2Container  	    = document.getElementById('fwIDInfo2');
+    const fwIDInfo3Container   	    = document.getElementById('fwIDInfo3');
+    const satSelectList             = document.getElementById('satelliteSelect');
+    const navRateList               = document.getElementById('navRate');
+    //Define BLE Device Specs
+    var deviceName                  = 'SENS-D07CCF';
+    var bleService                  = 'a5ebf74e-5df6-403f-95b4-022777b4c694';	
+    var ledCharacteristic           = '0a26718e-67a9-4a0a-adf0-0f5b4e0255eb';
+    var sensorCharacteristic        = 'ee2510b7-4f9c-431d-8452-c7a654c4d9b4';
+
+	
+    //Global Variables to Handle Bluetooth
+    var bleServer;
+    var bleServiceFound;
+    var sensorCharacteristicFound;
+
+    // Global variables for sensor
+    var nSum 	            = 0;
+    var nCount 	            = 0;
+    var nCurrSensValue      = 0;
+    var bIsNoSensor 	    = false;
+    var nCurrCalPoint	    = 0;
+    var nXPoint1            = 0;
+    var nXPoint2            = 0;
+    var nYPoint1            = 0;
+    var nYPoint2            = 0;
+    var bGetFWCalInfo       = true;
+    var sFWDDMMYYInfo       = "";
+    var fLongitude	        = 0.0;
+    var fLatitude	        = 0.0;
+    var fPrevLongitude      = 999.99;
+    var fPrevLatitude       = 999.99;
+    var fDistance	        = 0.0;
+    var nBattDigital	    = 0;
+    var nSatNo		        = 0;
+    var bStartDistMeas	    = false;
+
+    var nNavRateIndex       = 0;    // default Nav Rate = 1Hz
+    var nSatSelState        = 1;    // default - Only GPS
+
+    // existing content - keep existing content to be appended with new
+    var existingContent = ""; 
+    var tRefTime, tCurrentTime;
+	
+    satSelectList.onchange = updSatelliteSelection;
+
+    // Connect Button (search for BLE Devices only if BLE is available)
+    connectButton.addEventListener('click', (event) => {
+        if (isWebBluetoothEnabled()){
+            connectToDevice();
+            bGetFWCalInfo = true;
+        }
+    });
+
+    // Disconnect Button
+    disconnectButton.addEventListener('click', disconnectDevice);
+    // Distance Button
+    distanceButton.addEventListener('click',distanceBtnPressed);
+
+    // **** BLE Device Function Hangler ******
+    // Check if BLE is available in your Browser
+    function isWebBluetoothEnabled() {
+        if (!navigator.bluetooth) {
+            console.log("Web Bluetooth API is not available in this browser!");
+            bleStateContainer.innerHTML = "Web Bluetooth API is not available in this browser!";
+            return false
+        }
+        console.log('Web Bluetooth API supported in this browser.');
+        return true
+    }
+
+    //Connect to BLE Device and Enable Notifications
+    function connectToDevice(){
+        console.log('Initializing Bluetooth...');
+        navigator.bluetooth.requestDevice({
+	    // check for device with name starting with
+	    filters: [{namePrefix: "wGPS-"}],	
+                optionalServices: [bleService]
+        })
+        .then(device => {
+            // device selected and connect to device 	
+            console.log('Device Selected:', device.name);
+            deviceName = device.name;
+            bleStateContainer.innerHTML = 'Connected to  ' + device.name;
+            bleStateContainer.style.color = "#24af37";
+            device.addEventListener('gattservicedisconnected', onDisconnected);
+            return device.gatt.connect();
+        })
+        .then(gattServer =>{
+            // device connected and get the service
+            bleServer = gattServer;
+            console.log("Connected to GATT Server");
+            disconnectButton.disabled = false;	
+            return bleServer.getPrimaryService(bleService);
+        })
+        .then(service => {
+            // service found, then get the sensor data characteristics
+            bleServiceFound = service;
+            console.log("Service discovered:", service.uuid);
+            return service.getCharacteristic(sensorCharacteristic);
+        })
+        .then(characteristic => {
+            //  sensor characteristics found, then start event to handle it
+            console.log("Characteristic discovered:", characteristic.uuid);
+            sensorCharacteristicFound = characteristic;
+            characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicChange);
+            characteristic.startNotifications();
+            console.log("Notifications Started.");
+            return characteristic.readValue();
+        })
+        .then(value => {
+            // read value, then display it
+            console.log("Read value: ", value);
+            const newValueReceived = new Int16Array(event.target.value.buffer);
+        })
+        .catch(error => {
+            console.log('Error: ', error);
+        })
+    }
+
+    // handle disconnection event received
+    function onDisconnected(event)
+    {
+        // Disconnect event occurs, then update the state
+        console.log('Device Disconnected:', event.target.device.name);
+        bleStateContainer.innerHTML = "Device disconnected";
+        bleStateContainer.style.color = "#d13a30";
+        disconnectButton.disabled = true;
+	    bFirstConnect = false;
+        connectToDevice();
+    }
+
+    // handle Start button pressed
+    function distanceBtnPressed(event)
+    {
+        var sOptions;
+	    if(bStartDistMeas)
+	    {   
+    	    distanceButton.textContent = "Start";
+	        bStartDistMeas = false;
+	        saveGPSInfo();
+        }
+	    else
+	    {   // initialize parameters	    
+	        distanceButton.textContent = "Stop";
+    	    fPrevLatitude   = 999.99;
+    	    fPrevLongitude  = 999.99;
+    	    fDistance	    = 0.0;
+	        existingContent = "";
+    //        sOptions = satSelectList.selectedIndex;
+   //         existingContent = existingContent + sOptions.toString(2) + "\n";
+            bStartDistMeas  = true;
+	    }  
+    }
+
+    // handle characteristic change 
+    function handleCharacteristicChange(event)
+    {
+       // Characteristics value received
+        const newValueReceived = new Uint16Array(event.target.value.buffer);
+        var fData = 0.00;
+        var sInfo = "";
+
+        if (newValueReceived.length == 6)
+        {   // Non -Log Data
+            if(newValueReceived[5]==5002)
+	        { // Check if it is a GPS sensor
+        	    if (bGetFWCalInfo) {
+            	    getDevFwCalInfo();
+            		bGetFWCalInfo = false;
+        	    }
+		        fLatitude   = combineWordsToFloat(newValueReceived[3],newValueReceived[2]);
+		        fLongitude 	= combineWordsToFloat(newValueReceived[1],newValueReceived[0]);
+		        // handling for drift
+		        fData = fLatitude - fPrevLatitude;
+		        if(fData<0)
+		            fData = -fData;	// set to positive
+		        if(fData<0.0000020)
+		        {
+		            fPrevLatitude = fLatitude;	// drift - then set prev=curr
+		        }
+
+		        fData = fLongitude - fPrevLongitude;
+		        if(fData<0)
+		            fData = -fData;	// set to positive
+		        if(fData<0.0000080)
+		            fPrevLongitude = fLongitude;	// drift - then set prev=curr
+
+		        nSatNo     	= (newValueReceived[4]>>12);
+		        nBattDigital	= (newValueReceived[4]&0xFFF);
+		        UpdateGPSValue();
+           }
+        }
+        else if ( (newValueReceived.length == 7) )
+        {   // FW ver info content
+            const mmDD = ('0000' + newValueReceived[2].toString(16).toUpperCase()).slice(-4); 
+            var sInfo2 = "";
+
+            sInfo = sInfo.concat("FW Version: ", newValueReceived[1].toString(16));
+            sInfo2 = sInfo2.concat(sInfo, mmDD);
+            sFWDDMMYYInfo = sInfo2;
+            fwIDInfoContainer.innerHTML = sInfo2;
+            // additional GPS info
+            nNavRateIndex = newValueReceived[3];
+            navRateList.selectedIndex = nNavRateIndex;
+            setSatelliteSelect(newValueReceived[4]);
+        }      
+    }
+
+    function setSatelliteSelect(nGpsSelect)
+    {                       //     0   1   2  3  4  5  6  7
+        const nGPSTableIndex = [ 0xFF, 0,  1, 3, 2, 4, 5, 6];
+        
+        var nSelect = nGpsSelect&0x7;
+        
+        satSelectList.selectedIndex = nGPSTableIndex[nSelect];
+        nSatSelState = nGpsSelect;
+    }
+
+    function updSatelliteSelection()
+    {			    //   0  1  2  3  4  5  6  
+        const nGPSTableIdx = [ 1, 2, 4, 3, 5, 6, 7];    	
+        var anSatData = new Uint8Array(4);
+	var nSelSatCfg = this.selectedIndex;
+
+        // prepare the calibration data to be sent to the device
+        anSatData[0] = 0x0;     // cmd lo byte
+        anSatData[1] = 0xA5;    // cmd hi byte
+        anSatData[2] = 0x0;     // data lo byte
+        anSatData[3] = nGPSTableIdx[nSelSatCfg];    // data hi byte
+        // send the cal data to device
+        writeOnCharacteristic(anSatData);   // set offset
+
+    }
+
+    function combineWordsToFloat(highWord, lowWord) {
+  	// Step 1: Combine into a 32-bit unsigned integer
+  	const uint32 = (highWord << 16) | lowWord;
+
+  	// Step 2: Create a buffer and write the uint32
+  	const buffer = new ArrayBuffer(4);
+  	const view = new DataView(buffer);
+  	view.setUint32(0, uint32, false); // false = big-endian
+
+  	// Step 3: Read as float32
+  	return view.getFloat32(0, false); // false = big-endian
+    }
+
+    // update GPS info for display
+    function UpdateGPSValue()
+    {
+        var fSensorValue;
+        var sInfo = "";
+        var nDP = 5;
+	sInfo = fLongitude.toFixed(nDP); 
+        longitudeValue.innerHTML = sInfo;	// update sensor value to display
+	sInfo = fLatitude.toFixed(nDP); 
+        latitudeValue.innerHTML = sInfo;	// update sensor value to display
+	fSensorValue = nSatNo *1.0;
+	sInfo = fSensorValue.toFixed(2);
+
+        // Battery Level Update
+        sInfo = "";                                                     // clear the string
+        fData = nBattDigital * 0.1527492796 - 412.9151780035;		// battery voltage to %
+        if (fData > 100.0)
+            fData = 100.0;                                              // ensure the battery % clip to 100% max
+        sInfo = sInfo.concat(fData.toFixed(0), "%  (");                    // convert to string and append unit info
+	sInfo = sInfo.concat(nSatNo.toFixed(0),")");
+	//
+        batteryLevelContainer.innerHTML = sInfo;                        // update battery level to display
+	if(bStartDistMeas)
+	{
+	    if(nSatNo)
+	    {
+		computeDistance();
+                sInfo = fDistance.toFixed(3);
+                distanceValue.innerHTML = sInfo
+	    }
+	    updateGPSInfo(); // Store the coordinates Info
+	}
+    }
+
+    // save the cal data to file
+    function SavecalData2File() {
+        var sFileName = "";
+        var nNumSensorRange = sensorNameList.options.length;
+        var nCnt;
+        sFileName = sFileName.concat(deviceName, ".dat");
+        var sInfo = sFWDDMMYYInfo + "\n";
+
+        for (nCnt = 0; nCnt < nNumSensorRange; nCnt++)
+        {
+            sInfo += fGain[nCnt].toFixed(6) + "\n" + nOffset[nCnt].toString(10);
+            if (nCnt != nNumSensorRange - 1)
+                sInfo += "\n"; 
+        }
+        const link = document.createElement("a");
+        const file = new Blob([sInfo], { type: 'text/plain' });
+        link.href = URL.createObjectURL(file);
+        link.download = sFileName;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    // send the byte array cmd+data to device
+    function writeOnCharacteristic(value){
+        if (bleServer && bleServer.connected) {
+            bleServiceFound.getCharacteristic(ledCharacteristic)
+            .then(characteristic => {   // the send characteristic found
+                console.log("Found the LED characteristic: ", characteristic.uuid);
+                var nLength = value.length;                 // get the data length
+	            var nCnt;
+                const data = new Uint8Array(nLength);       // create the byte array to store the data to be sent
+                for(nCnt=0;nCnt<nLength;nCnt++)             //
+	                data[nCnt] = value[nCnt];               //
+                return characteristic.writeValueWithoutResponse(data);
+            })
+            .then(() => {
+                latestValueSent.innerHTML = value;
+                console.log("Value written to LEDcharacteristic:", value);
+            })
+            .catch(error => {
+                console.error("Error writing to the LED characteristic: ", error);
+            });
+        } else {
+            console.error ("Bluetooth is not connected. Cannot write to characteristic.")
+            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
+        }
+    }
+
+
+    // send a cmd to device to reset calibration value to gain=1, offset = 0
+    function getDevFwCalInfo() {
+        var byteArray = new Uint8Array(2);
+        // cmd word to be sent to device
+        byteArray[0] = 0x00;
+        byteArray[1] = 0xa0;
+        writeOnCharacteristic(byteArray);
+    }
+
+    // disconnect device handling
+    function disconnectDevice() {
+        console.log("Disconnect Device.");
+        if (bleServer && bleServer.connected) {
+            if (sensorCharacteristicFound) {
+                sensorCharacteristicFound.stopNotifications()
+                    .then(() => {
+                        console.log("Notifications Stopped");
+                        return bleServer.disconnect();
+                    })
+                    .then(() => {
+                        console.log("Device Disconnected");
+                        bleStateContainer.innerHTML = "Device Disconnected";
+                        bleStateContainer.style.color = "#d13a30";
+	                    disconnectButton.disabled = true;           // disable the Disconnect button
+                    })
+                    .catch(error => {
+                        console.log("An error occurred:", error);
+                    });
+            } else {
+                console.log("No characteristic found to disconnect.");
+            }
+        } else {
+            // Throw an error if Bluetooth is not connected
+            console.error("Bluetooth is not connected.");
+            window.alert("Bluetooth is not connected.")
+        }
+    }
+
+    function updateGPSInfo(){
+	sInfo = fLatitude.toFixed(7) + "\t" + fLongitude.toFixed(7);
+      	sInfo += "\t" + nSatNo.toFixed(0);
+        sInfo += "\t" + fDistance.toFixed(3) + "\n";
+	// Append new data to existing content
+       	existingContent = existingContent + sInfo;
+    }
+
+    function saveGPSInfo(){
+        var sFileName = "GPS.dat";
+       	// Create and download the updated file
+       	const link = document.createElement("a");
+       	const file = new Blob([existingContent], { type: "text/plain" });
+       	link.href = URL.createObjectURL(file);
+       	link.download = sFileName;
+       	link.click();
+      	URL.revokeObjectURL(link.href);
+    }
+
+    function computeDistance(){
+	if(fPrevLatitude==999.99)
+	{   // handling for the first data point
+	    fPrevLatiude   = fLatitude;
+            fPrevLongitude = fLongitude;
+	}
+	else
+	{
+	    const nRadius = 6371e3; // earth radius inmetres
+	    const fLat1Rad = fPrevLatitude * Math.PI/180; // φ, λ in radians
+	    const fLat2Rad = fLatitude * Math.PI/180;
+	    const fLatDiffRad = (fLatitude-fPrevLatitude) * Math.PI/180;
+	    const fLongDiffRad = (fLongitude-fPrevLongitude) * Math.PI/180;
+
+	    const a = Math.sin(fLatDiffRad/2) * Math.sin(fLatDiffRad/2) +
+          	Math.cos(fLat1Rad) * Math.cos(fLat2Rad) *
+          	Math.sin(fLongDiffRad/2) * Math.sin(fLongDiffRad/2);
+
+	     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+	     const d = nRadius * c; // in metres
+	     // update distance
+	     fDistance += d;
+	}
+	fPrevLatitude  = fLatitude;
+        fPrevLongitude = fLongitude;
+    }
+
+    
+
+    function getDateTime() {
+        var currentdate = new Date();
+        var day = ("00" + currentdate.getDate()).slice(-2); // Convert day to string and slice
+        var month = ("00" + (currentdate.getMonth() + 1)).slice(-2);
+        var year = currentdate.getFullYear();
+        var hours = ("00" + currentdate.getHours()).slice(-2);
+        var minutes = ("00" + currentdate.getMinutes()).slice(-2);
+        var seconds = ("00" + currentdate.getSeconds()).slice(-2);
+
+        var datetime = day + "/" + month + "/" + year + " at " + hours + ":" + minutes + ":" + seconds;
+        return datetime;
+    }
+
+
+    
+  </script>
+</body>
+</html>
+
+
+
