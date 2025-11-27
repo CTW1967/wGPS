@@ -311,7 +311,7 @@
         var fPrevLatitude       = 999.99;
         var fDistance	        = 0.0;
         var nBattDigital	    = 0;
-        var nSatNo		        = 0;
+        let nSatNo		 = 0;
         var bStartDistMeas	    = false;
 
         var nNavRateIndex       = 0;    // default Nav Rate = 1Hz
@@ -463,9 +463,11 @@
                     if(fData<0)
                         fData = -fData;	// set to positive
                     if(fData<0.0000080)
+		    {
 //                        fPrevLongitude = fLongitude;	// drift - then set prev=curr
-
-                    nSatNo     	= (newValueReceived[4]>>12);
+		    }
+		    nSatNo = newValueReceived[4]>>>12;
+		    nSatNo <<= 1;	// x2 since the value is half
                     nBattDigital	= (newValueReceived[4]&0xFFF);
                     UpdateGPSValue();
             }
