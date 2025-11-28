@@ -466,10 +466,13 @@
                     }
                     fLatitude   = combineWordsToFloat(newValueReceived[3],newValueReceived[2]);
                     fLongitude 	= combineWordsToFloat(newValueReceived[1],newValueReceived[0]);
-                    if(nAvgModeIndex)
-                    {
-                        fLatitude   = GetMovAv(fLatitude,0);
-                        fLongitude  = GetMovAv(fLongitude,1);
+		            if(bStartDistMeas)
+		            {
+                        if(nAvgModeIndex )
+                        {
+                            fLatitude   = GetMovAv(fLatitude,0);
+                            fLongitude  = GetMovAv(fLongitude,1);
+                        }
                     }
                     /*
                     // handling for drift
@@ -506,7 +509,7 @@
                 fwIDInfoContainer.innerHTML = sInfo2;
                 // additional GPS info
                 nNavRateIndex = newValueReceived[3];
-                navRateList.selectedIndex = nNavRateIndex;
+//                navRateList.selectedIndex = nNavRateIndex;
                 setSatelliteSelect(newValueReceived[4]);
             }      
         }
@@ -563,7 +566,6 @@
             else
             {
                 fMovAvSum[nDataType] += fData;
-                fSavedData[nDataType][nIndex] = fData;
                 if(nSavedCnt[nDataType]==nAvChkSize)
                 {
                     fMovAvSum[nDataType] -= fSavedData[nDataType][nIndex];
@@ -574,11 +576,14 @@
                     nSavedCnt[nDataType]++;
                     fAvData = fMovAvSum[nDataType]/nSavedCnt[nDataType];
                 }
+                fSavedData[nDataType][nIndex] = fData;
             }
             ++nIndex;
             if(nIndex==nAvChkSize)
                 nIndex = 0;
             nSavePosIndex[nDataType] = nIndex;
+
+	        return fAvData;
         }
 
         function combineWordsToFloat(highWord, lowWord) {
