@@ -313,8 +313,8 @@
         var nBattDigital	    = 0;
         var nSatNo		        = 0;
         var bStartDistMeas	    = false;
-	var fGndSpeed		= 0.0;
-	var nFixQuality		= 0;
+	    var fGndSpeed		    = 0.0;
+	    var nFixQuality		    = 0;
 
         var nAvgModeIndex       = 2;    // default 10 data averaging, 0- no averaging, 1- 5 data averging
         var nSatSelState        = 1;    // default - Only GPS
@@ -462,25 +462,26 @@
             {   // Non -Log Data
                 if(newValueReceived[5]==5002)
                 { // Check if it is a GPS sensor
-                    if (bGetFWCalInfo) {
+                    if (bGetFWCalInfo) 
+                    {
                         getDevFwCalInfo();
                         bGetFWCalInfo = false;
                     }
                     fLatitude   = combineWordsToFloat(newValueReceived[3],newValueReceived[2]);
                     fLongitude 	= combineWordsToFloat(newValueReceived[1],newValueReceived[0]);
-		    fGndSpeed	= combineWordsToFloat(newValueReceived[7],newValueReceived[6]);
-		    nFixQuality = newValueReceived[8];
-		    if( (fGndSpeed<0.8) )
-                    {
-			fPrevLatitude = fLatitude;
-			fPrevLongitude = fLongitude;
-		    }
+		            fGndSpeed	= combineWordsToFloat(newValueReceived[7],newValueReceived[6]);
+		            nFixQuality = newValueReceived[8];
 		            if(bStartDistMeas)
 		            {
                         if(nAvgModeIndex )
                         {
                             fLatitude   = GetMovAv(fLatitude,0);
                             fLongitude  = GetMovAv(fLongitude,1);
+                        }
+                        if( (fGndSpeed<0.9) )// less than 0.25m/s
+                        {
+                            fPrevLatitude = fLatitude;
+                            fPrevLongitude = fLongitude;
                         }
                     }
                     /*
